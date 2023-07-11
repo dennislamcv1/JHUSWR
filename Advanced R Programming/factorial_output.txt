@@ -1,0 +1,7 @@
+Using n = 500
+Unit: microseconds
+                expr    min      lq     mean  median      uq     max neval
+   Factorial_loop(n)   56.1   58.80  172.021   61.10   62.30 11080.8   100
+ Factorial_reduce(n) 1686.1 1743.00 1966.587 1839.05 1893.40 15251.7   100
+   Factorial_func(n) 3795.6 3908.35 4245.126 3994.95 4073.75 16891.4   100
+    Factorial_mem(n) 3704.6 3839.05 4381.655 3909.60 4024.50 26664.5   100
