@@ -1,0 +1,29 @@
+---
+title: "Swirl Launcher"
+output: html_document
+date: "2024-07-26"
+---
+
+# R version 3.6.3 (2020-02-29) -- "Holding the Windsock"
+
+```{r}
+#packageVersion("swirl")
+library(swirl)
+#install_course("The R Programming Environment")
+#install_course("Advanced R Programming")
+#swirl::install_course()
+```
+
+```{r}
+swirl()  
+
+```
+
+| When you are at the R prompt (>):
+| -- Typing skip() allows you to skip the current question.
+| -- Typing play() lets you experiment with R on your own; swirl will
+| ignore what you do...
+| -- UNTIL you type nxt() which will regain swirl's attention.
+| -- Typing bye() causes swirl to exit. Your progress will be saved.
+| -- Typing main() returns you to swirl's main menu.
+| -- Typing info() displays these options again.

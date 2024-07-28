@@ -1,66 +1,491 @@
-> ## Read in the data
+> # Read in the data
 > library(readr)
 > library(magrittr)
 > source("oop_code.R")
-> ## Load any other packages that you may need to execute your code
-> library(tidyr)
-> library(dplyr)
 > 
-> data <- read_csv("data/MIE.csv")
-Rows: 120877 Columns: 5                                                                   
-── Column specification ──────────────────────────────────────────────────────────────────
-Delimiter: ","
-chr (1): room
-dbl (4): id, visit, value, timepoint
+> # Load data
+> data <- read_csv("MIE.csv")
 
-ℹ Use `spec()` to retrieve the full column specification for this data.
-ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+-- Column specification -------------------------------------------------------
+cols(
+  id = col_double(),
+  visit = col_double(),
+  room = col_character(),
+  value = col_double(),
+  timepoint = col_double()
+)
+
+> 
+> # Create LongitudinalData object
 > x <- make_LD(data)
 > print(class(x))
 [1] "LongitudinalData"
 > print(x)
-Longitudinal dataset with 10 subjects 
+LongitudinalData Object
+Number of subjects: 10 
+Number of visits: 3 
+Number of rooms: 10 
 > 
-> ## Subject 10 doesn't exist
+> # Access data for non-existent subject (id = 10)
 > out <- subject(x, 10)
+Warning message:
+In Subject(object$data, id) : No data for subject with ID 10
 > print(out)
-NULL
+[1] id        visit     room      value     timepoint
+<0 rows> (or 0-length row.names)
 > 
+> # Access data for subject 14
 > out <- subject(x, 14)
 > print(out)
-NULL
+    id visit    room value timepoint
+1   14     0 bedroom  6.00        53
+2   14     0 bedroom  6.00        54
+3   14     0 bedroom  2.75        55
+4   14     0 bedroom  2.75        56
+5   14     0 bedroom  2.75        57
+6   14     0 bedroom  2.75        58
+7   14     0 bedroom  6.00        59
+8   14     0 bedroom  6.00        60
+9   14     0 bedroom  2.75        61
+10  14     0 bedroom  2.75        62
+11  14     0 bedroom  2.75        63
+12  14     0 bedroom  2.75        64
+13  14     0 bedroom  2.75        65
+14  14     0 bedroom  2.75        66
+15  14     0 bedroom  2.75        67
+16  14     0 bedroom  2.75        68
+17  14     0 bedroom  2.75        69
+18  14     0 bedroom  2.75        70
+19  14     0 bedroom  2.75        71
+20  14     0 bedroom  2.75        72
+21  14     0 bedroom  6.00        73
+22  14     0 bedroom  2.75        74
+23  14     0 bedroom  2.75        75
+24  14     0 bedroom  2.75        76
+25  14     0 bedroom  6.00        77
+26  14     0 bedroom  2.75        78
+27  14     0 bedroom  2.75        79
+28  14     0 bedroom  2.75        80
+29  14     0 bedroom  2.75        81
+30  14     0 bedroom  2.75        82
+31  14     0 bedroom  6.00        83
+32  14     0 bedroom  2.75        84
+33  14     0 bedroom  2.75        85
+34  14     0 bedroom  2.75        86
+35  14     0 bedroom  2.75        87
+36  14     0 bedroom  6.00        88
+37  14     0 bedroom  2.75        89
+38  14     0 bedroom  2.75        90
+39  14     0 bedroom  2.75        91
+40  14     0 bedroom  2.75        92
+41  14     0 bedroom  2.75        93
+42  14     0 bedroom  2.75        94
+43  14     0 bedroom  6.00        95
+44  14     0 bedroom  2.75        96
+45  14     0 bedroom  2.75        97
+46  14     0 bedroom  2.75        98
+47  14     0 bedroom  2.75        99
+48  14     0 bedroom  2.75       100
+49  14     0 bedroom  2.75       101
+50  14     0 bedroom  2.75       102
+51  14     0 bedroom  2.75       103
+52  14     0 bedroom  2.75       104
+53  14     0 bedroom  2.75       105
+54  14     0 bedroom  6.00       106
+55  14     0 bedroom  6.00       107
+56  14     0 bedroom  2.75       108
+57  14     0 bedroom  2.75       109
+58  14     0 bedroom  2.75       110
+59  14     0 bedroom  2.75       111
+60  14     0 bedroom  7.00       112
+61  14     0 bedroom  9.00       113
+62  14     0 bedroom  2.75       114
+63  14     0 bedroom  6.00       115
+64  14     0 bedroom  2.75       116
+65  14     0 bedroom  6.00       117
+66  14     0 bedroom  6.00       118
+67  14     0 bedroom  6.00       119
+68  14     0 bedroom  2.75       120
+69  14     0 bedroom  2.75       121
+70  14     0 bedroom  2.75       122
+71  14     0 bedroom  2.75       123
+72  14     0 bedroom  6.00       124
+73  14     0 bedroom  6.00       125
+74  14     0 bedroom  2.75       126
+75  14     0 bedroom  2.75       127
+76  14     0 bedroom  2.75       128
+77  14     0 bedroom  6.00       129
+78  14     0 bedroom  6.00       130
+79  14     0 bedroom  6.00       131
+80  14     0 bedroom  6.00       132
+81  14     0 bedroom  2.75       133
+82  14     0 bedroom  6.00       134
+83  14     0 bedroom  6.00       135
+84  14     0 bedroom  6.00       136
+85  14     0 bedroom  6.00       137
+86  14     0 bedroom  6.00       138
+87  14     0 bedroom  6.00       139
+88  14     0 bedroom  6.00       140
+89  14     0 bedroom  6.00       141
+90  14     0 bedroom  6.00       142
+91  14     0 bedroom  6.00       143
+92  14     0 bedroom  6.00       144
+93  14     0 bedroom  2.75       145
+94  14     0 bedroom  6.00       146
+95  14     0 bedroom  6.00       147
+96  14     0 bedroom  6.00       148
+97  14     0 bedroom  8.00       149
+98  14     0 bedroom  7.00       150
+99  14     0 bedroom 11.00       151
+100 14     0 bedroom  2.75       152
+101 14     0 bedroom  2.75       153
+102 14     0 bedroom  6.00       154
+103 14     0 bedroom  6.00       155
+104 14     0 bedroom  6.00       156
+105 14     0 bedroom  2.75       157
+106 14     0 bedroom  6.00       158
+107 14     0 bedroom  6.00       159
+108 14     0 bedroom  6.00       160
+109 14     0 bedroom  6.00       161
+110 14     0 bedroom  6.00       162
+111 14     0 bedroom  2.75       163
+112 14     0 bedroom  6.00       164
+113 14     0 bedroom 10.00       165
+114 14     0 bedroom  8.00       166
+115 14     0 bedroom 10.00       167
+116 14     0 bedroom  6.00       168
+117 14     0 bedroom  2.75       169
+118 14     0 bedroom  6.00       170
+119 14     0 bedroom  8.00       171
+120 14     0 bedroom  7.00       172
+121 14     0 bedroom  6.00       173
+122 14     0 bedroom  6.00       174
+123 14     0 bedroom  2.75       175
+124 14     0 bedroom  6.00       176
+125 14     0 bedroom  7.00       177
+126 14     0 bedroom  6.00       178
+127 14     0 bedroom  2.75       179
+128 14     0 bedroom  2.75       180
+129 14     0 bedroom  2.75       181
+130 14     0 bedroom  6.00       182
+131 14     0 bedroom  6.00       183
+132 14     0 bedroom 10.00       184
+133 14     0 bedroom  9.00       185
+134 14     0 bedroom  2.75       186
+135 14     0 bedroom  2.75       187
+136 14     0 bedroom  6.00       188
+137 14     0 bedroom  6.00       189
+138 14     0 bedroom  2.75       190
+139 14     0 bedroom  2.75       191
+140 14     0 bedroom  2.75       192
+141 14     0 bedroom  2.75       193
+142 14     0 bedroom  6.00       194
+143 14     0 bedroom  6.00       195
+144 14     0 bedroom  2.75       196
+145 14     0 bedroom  2.75       197
+146 14     0 bedroom  2.75       198
+147 14     0 bedroom  2.75       199
+148 14     0 bedroom  8.00       200
+149 14     0 bedroom  8.00       201
+150 14     0 bedroom 12.00       202
+151 14     0 bedroom  2.75       203
+152 14     0 bedroom  2.75       204
+153 14     0 bedroom  2.75       205
+154 14     0 bedroom  6.00       206
+155 14     0 bedroom  6.00       207
+156 14     0 bedroom  6.00       208
+157 14     0 bedroom  2.75       209
+158 14     0 bedroom  2.75       210
+159 14     0 bedroom  2.75       211
+160 14     0 bedroom  6.00       212
+161 14     0 bedroom  7.00       213
+162 14     0 bedroom  6.00       214
+163 14     0 bedroom  6.00       215
+164 14     0 bedroom  6.00       216
+165 14     0 bedroom  6.00       217
+166 14     0 bedroom  6.00       218
+167 14     0 bedroom  7.00       219
+168 14     0 bedroom  7.00       220
+169 14     0 bedroom 13.00       221
+170 14     0 bedroom 12.00       222
+171 14     0 bedroom  9.00       223
+172 14     0 bedroom 10.00       224
+173 14     0 bedroom  9.00       225
+174 14     0 bedroom  8.00       226
+175 14     0 bedroom  7.00       227
+176 14     0 bedroom  7.00       228
+177 14     0 bedroom  7.00       229
+178 14     0 bedroom  7.00       230
+179 14     0 bedroom  7.00       231
+180 14     0 bedroom  7.00       232
+181 14     0 bedroom  8.00       233
+182 14     0 bedroom  6.00       234
+183 14     0 bedroom  6.00       235
+184 14     0 bedroom  6.00       236
+185 14     0 bedroom  8.00       237
+186 14     0 bedroom  8.00       238
+187 14     0 bedroom  7.00       239
+188 14     0 bedroom  7.00       240
+189 14     0 bedroom  7.00       241
+190 14     0 bedroom  7.00       242
+191 14     0 bedroom  8.00       243
+192 14     0 bedroom  8.00       244
+193 14     0 bedroom  7.00       245
+194 14     0 bedroom  7.00       246
+195 14     0 bedroom  7.00       247
+196 14     0 bedroom  8.00       248
+197 14     0 bedroom  8.00       249
+198 14     0 bedroom  7.00       250
+199 14     0 bedroom  7.00       251
+200 14     0 bedroom  7.00       252
+ [ reached 'max' / getOption("max.print") -- omitted 11745 rows ]
 > 
+> # Get a summary for subject 54
 > out <- subject(x, 54) %>% summary
+Summary for Subject ID: 54 
 > print(out)
-ID:  54 
-  visit  bedroom       den living room    office
-1     0       NA        NA    2.792601 13.255475
-2     1       NA 13.450946          NA  4.533921
-3     2 4.193721  3.779225          NA        NA
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   2.75    2.75    2.75    7.08    9.00  271.00 
 > 
+> # Get a summary for subject 14
 > out <- subject(x, 14) %>% summary
+Summary for Subject ID: 14 
 > print(out)
-ID:  14 
-  visit   bedroom family  room living room
-1     0  4.786592           NA     2.75000
-2     1  3.401442     8.426549          NA
-3     2 18.583635           NA    22.55069
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   2.75    2.75    2.75   10.69    7.00  656.00 
 > 
+> # Access data for subject 44, visit 0, room 'bedroom'
 > out <- subject(x, 44) %>% visit(0) %>% room("bedroom")
 > print(out)
-ID:  44 
-Visit:  0 
-Room:  bedroom> 
-> ## Show a summary of the pollutant values
+    id visit    room value timepoint
+1   44     0 bedroom    23        94
+2   44     0 bedroom    23        95
+3   44     0 bedroom    24        96
+4   44     0 bedroom    29        97
+5   44     0 bedroom    26        98
+6   44     0 bedroom    25        99
+7   44     0 bedroom    26       100
+8   44     0 bedroom    27       101
+9   44     0 bedroom    25       102
+10  44     0 bedroom    30       103
+11  44     0 bedroom    30       104
+12  44     0 bedroom    30       105
+13  44     0 bedroom    32       106
+14  44     0 bedroom    30       107
+15  44     0 bedroom    34       108
+16  44     0 bedroom    33       109
+17  44     0 bedroom    33       110
+18  44     0 bedroom    35       111
+19  44     0 bedroom    36       112
+20  44     0 bedroom    34       113
+21  44     0 bedroom    36       114
+22  44     0 bedroom    33       115
+23  44     0 bedroom    40       116
+24  44     0 bedroom    37       117
+25  44     0 bedroom    37       118
+26  44     0 bedroom    38       119
+27  44     0 bedroom    39       120
+28  44     0 bedroom    38       121
+29  44     0 bedroom    39       122
+30  44     0 bedroom    37       123
+31  44     0 bedroom    37       124
+32  44     0 bedroom    38       125
+33  44     0 bedroom    37       126
+34  44     0 bedroom    40       127
+35  44     0 bedroom    39       128
+36  44     0 bedroom    38       129
+37  44     0 bedroom    38       130
+38  44     0 bedroom    39       131
+39  44     0 bedroom    39       132
+40  44     0 bedroom    41       133
+41  44     0 bedroom    40       134
+42  44     0 bedroom    42       135
+43  44     0 bedroom    44       136
+44  44     0 bedroom    49       137
+45  44     0 bedroom    49       138
+46  44     0 bedroom    51       139
+47  44     0 bedroom    53       140
+48  44     0 bedroom    55       141
+49  44     0 bedroom    55       142
+50  44     0 bedroom    60       143
+51  44     0 bedroom    62       144
+52  44     0 bedroom    63       145
+53  44     0 bedroom    66       146
+54  44     0 bedroom    70       147
+55  44     0 bedroom    73       148
+56  44     0 bedroom    74       149
+57  44     0 bedroom    76       150
+58  44     0 bedroom    82       151
+59  44     0 bedroom    87       152
+60  44     0 bedroom    85       153
+61  44     0 bedroom    91       154
+62  44     0 bedroom    93       155
+63  44     0 bedroom    95       156
+64  44     0 bedroom    98       157
+65  44     0 bedroom   104       158
+66  44     0 bedroom   105       159
+67  44     0 bedroom   111       160
+68  44     0 bedroom   115       161
+69  44     0 bedroom   120       162
+70  44     0 bedroom   117       163
+71  44     0 bedroom   123       164
+72  44     0 bedroom   125       165
+73  44     0 bedroom   128       166
+74  44     0 bedroom   129       167
+75  44     0 bedroom   133       168
+76  44     0 bedroom   134       169
+77  44     0 bedroom   135       170
+78  44     0 bedroom   138       171
+79  44     0 bedroom   142       172
+80  44     0 bedroom   146       173
+81  44     0 bedroom   143       174
+82  44     0 bedroom   147       175
+83  44     0 bedroom   147       176
+84  44     0 bedroom   147       177
+85  44     0 bedroom   151       178
+86  44     0 bedroom   157       179
+87  44     0 bedroom   155       180
+88  44     0 bedroom   156       181
+89  44     0 bedroom   155       182
+90  44     0 bedroom   153       183
+91  44     0 bedroom   161       184
+92  44     0 bedroom   166       185
+93  44     0 bedroom   164       186
+94  44     0 bedroom   170       187
+95  44     0 bedroom   189       188
+96  44     0 bedroom   191       189
+97  44     0 bedroom   192       190
+98  44     0 bedroom   197       191
+99  44     0 bedroom   192       192
+100 44     0 bedroom   196       193
+101 44     0 bedroom   195       194
+102 44     0 bedroom   195       195
+103 44     0 bedroom   191       196
+104 44     0 bedroom   191       197
+105 44     0 bedroom   193       198
+106 44     0 bedroom   196       199
+107 44     0 bedroom   198       200
+108 44     0 bedroom   200       201
+109 44     0 bedroom   202       202
+110 44     0 bedroom   197       203
+111 44     0 bedroom   198       204
+112 44     0 bedroom   196       205
+113 44     0 bedroom   194       206
+114 44     0 bedroom   197       207
+115 44     0 bedroom   197       208
+116 44     0 bedroom   197       209
+117 44     0 bedroom   201       210
+118 44     0 bedroom   201       211
+119 44     0 bedroom   213       212
+120 44     0 bedroom   202       213
+121 44     0 bedroom   205       214
+122 44     0 bedroom   210       215
+123 44     0 bedroom   209       216
+124 44     0 bedroom   212       217
+125 44     0 bedroom   206       218
+126 44     0 bedroom   211       219
+127 44     0 bedroom   209       220
+128 44     0 bedroom   210       221
+129 44     0 bedroom   212       222
+130 44     0 bedroom   210       223
+131 44     0 bedroom   209       224
+132 44     0 bedroom   210       225
+133 44     0 bedroom   213       226
+134 44     0 bedroom   212       227
+135 44     0 bedroom   208       228
+136 44     0 bedroom   207       229
+137 44     0 bedroom   207       230
+138 44     0 bedroom   210       231
+139 44     0 bedroom   207       232
+140 44     0 bedroom   207       233
+141 44     0 bedroom   209       234
+142 44     0 bedroom   205       235
+143 44     0 bedroom   201       236
+144 44     0 bedroom   208       237
+145 44     0 bedroom   202       238
+146 44     0 bedroom   201       239
+147 44     0 bedroom   202       240
+148 44     0 bedroom   194       241
+149 44     0 bedroom   199       242
+150 44     0 bedroom   190       243
+151 44     0 bedroom   191       244
+152 44     0 bedroom   191       245
+153 44     0 bedroom   186       246
+154 44     0 bedroom   181       247
+155 44     0 bedroom   173       248
+156 44     0 bedroom   176       249
+157 44     0 bedroom   174       250
+158 44     0 bedroom   169       251
+159 44     0 bedroom   166       252
+160 44     0 bedroom   165       253
+161 44     0 bedroom   162       254
+162 44     0 bedroom   165       255
+163 44     0 bedroom   160       256
+164 44     0 bedroom   155       257
+165 44     0 bedroom   153       258
+166 44     0 bedroom   152       259
+167 44     0 bedroom   153       260
+168 44     0 bedroom   150       261
+169 44     0 bedroom   147       262
+170 44     0 bedroom   148       263
+171 44     0 bedroom   148       264
+172 44     0 bedroom   147       265
+173 44     0 bedroom   147       266
+174 44     0 bedroom   146       267
+175 44     0 bedroom   141       268
+176 44     0 bedroom   140       269
+177 44     0 bedroom   136       270
+178 44     0 bedroom   137       271
+179 44     0 bedroom   137       272
+180 44     0 bedroom   129       273
+181 44     0 bedroom   130       274
+182 44     0 bedroom   128       275
+183 44     0 bedroom   128       276
+184 44     0 bedroom   127       277
+185 44     0 bedroom   125       278
+186 44     0 bedroom   124       279
+187 44     0 bedroom   132       280
+188 44     0 bedroom   127       281
+189 44     0 bedroom   127       282
+190 44     0 bedroom   119       283
+191 44     0 bedroom   118       284
+192 44     0 bedroom   115       285
+193 44     0 bedroom   113       286
+194 44     0 bedroom   114       287
+195 44     0 bedroom   115       288
+196 44     0 bedroom   115       289
+197 44     0 bedroom   112       290
+198 44     0 bedroom   114       291
+199 44     0 bedroom   110       292
+200 44     0 bedroom   109       293
+ [ reached 'max' / getOption("max.print") -- omitted 1672 rows ]
+> 
+> # Show a summary of the pollutant values for the same subset
 > out <- subject(x, 44) %>% visit(0) %>% room("bedroom") %>% summary
 > print(out)
-ID:  44 
-   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    8.0    30.0    51.0    88.8    80.0   911.0 
+       id         visit       room               value         timepoint     
+ Min.   :44   Min.   :0   Length:1872        Min.   :  8.0   Min.   :  94.0  
+ 1st Qu.:44   1st Qu.:0   Class :character   1st Qu.: 30.0   1st Qu.: 561.8  
+ Median :44   Median :0   Mode  :character   Median : 51.0   Median :1029.5  
+ Mean   :44   Mean   :0                      Mean   : 88.8   Mean   :1029.5  
+ 3rd Qu.:44   3rd Qu.:0                      3rd Qu.: 80.0   3rd Qu.:1497.2  
+ Max.   :44   Max.   :0                      Max.   :911.0   Max.   :1965.0  
 > 
+> # Show a summary of the pollutant values for subject 44, visit 1, room 'living room'
 > out <- subject(x, 44) %>% visit(1) %>% room("living room") %>% summary
 > print(out)
-ID:  44 
-   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-   2.75   14.00   24.00   41.37   37.00 1607.00 
+       id         visit       room               value        
+ Min.   :44   Min.   :1   Length:1872        Min.   :   2.75  
+ 1st Qu.:44   1st Qu.:1   Class :character   1st Qu.:  14.00  
+ Median :44   Median :1   Mode  :character   Median :  24.00  
+ Mean   :44   Mean   :1                      Mean   :  41.37  
+ 3rd Qu.:44   3rd Qu.:1                      3rd Qu.:  37.00  
+ Max.   :44   Max.   :1                      Max.   :1607.00  
+   timepoint     
+ Min.   : 107.0  
+ 1st Qu.: 574.8  
+ Median :1042.5  
+ Mean   :1042.5  
+ 3rd Qu.:1510.2  
+ Max.   :1978.0  
 > 

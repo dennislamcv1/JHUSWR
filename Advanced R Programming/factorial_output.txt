@@ -1,7 +1,18 @@
-Using n = 500
+# factorial_output.txt
+
+Benchmarking Results for Factorial Functions
+
 Unit: microseconds
-                expr    min      lq     mean  median      uq     max neval
-   Factorial_loop(n)   56.1   58.80  172.021   61.10   62.30 11080.8   100
- Factorial_reduce(n) 1686.1 1743.00 1966.587 1839.05 1893.40 15251.7   100
-   Factorial_func(n) 3795.6 3908.35 4245.126 3994.95 4073.75 16891.4   100
-    Factorial_mem(n) 3704.6 3839.05 4381.655 3909.60 4024.50 26664.5   100
+        expr     min       lq      mean   median       uq      max neval
+        loop   1.401   1.6515  37.18200   2.2010   2.5510 3454.101   100
+      reduce 201.101 205.0005 285.87298 208.7005 217.0010 4385.401   100
+   recursive   4.401   5.1005  39.14595   5.5010   5.9515 3347.100   100
+ memoization   4.102   4.4510   6.77903   5.5005   6.2010  101.501   100
+
+Discussion:
+1. **Factorial_loop** and **Factorial_mem** are generally the fastest, likely due to their simplicity and efficient handling of repeated computations.
+2. **Factorial_reduce** is slower, possibly due to the overhead of the purrr package's reduce function.
+3. **Factorial_func**, the recursive version, performs well for small inputs but can suffer from stack overflow errors or inefficiency for larger inputs due to the depth of recursion.
+4. **Factorial_mem** leverages memoization, providing efficient computation by storing previously computed results, especially useful for larger inputs.
+
+Further tests should involve a range of input sizes to see how the performance of these functions scales with larger values of n.
