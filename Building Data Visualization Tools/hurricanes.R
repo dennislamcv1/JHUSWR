@@ -1,0 +1,303 @@
+# Build a custom geom for ggplot2 that can be used to add the hurricane wind radii chart for a single storm observation to a map.
+# Use the geom to map the create a map showing the wind radii chart at one observation times for Hurricane Ike, which occurred in September 2008. Use an observation time when the storm was near or over the United States.
+
+
+# Setting path ------------------------------------------------------------
+
+
+# Packages ----------------------------------------------------------------
+library(readr)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(ggplot2)
+library(ggmap)
+library(geosphere)
+
+# Functions ---------------------------------------------------------------
+
+
+#' Reading hurricane data
+#'
+#' The function reads hurricane data from a fixed-width file and returns a dataframe.
+#'
+#' @param file_path The path to the fixed-width file containing hurricane data.
+#' @return A tibble containing the parsed hurricane data.
+#' @importFrom readr read_fwf fwf_widths
+#' @examples
+#' \dontrun{
+#' read_data("ebtrk_atlc_1988_2015.txt")
+#' }
+#' @export
+read_data <- function(file_path) {
+  # Defining column widths
+  ext_tracks_widths <- c(
+    7, 10, 2, 2, 3, 5, 5, 6, 4, 5, 4, 4, 5, 3, 4, 3, 3, 3,
+    4, 3, 3, 3, 4, 3, 3, 3, 2, 6, 1
+  )
+  # Defining column names
+  ext_tracks_colnames <- c(
+    "storm_id", "storm_name", "month", "day",
+    "hour", "year", "latitude", "longitude",
+    "max_wind", "min_pressure", "rad_max_wind",
+    "eye_diameter", "pressure_1", "pressure_2",
+    paste("radius_34", c("ne", "se", "sw", "nw"), sep = "_"),
+    paste("radius_50", c("ne", "se", "sw", "nw"), sep = "_"),
+    paste("radius_64", c("ne", "se", "sw", "nw"), sep = "_"),
+    "storm_type", "distance_to_land", "final"
+  )
+  # Reading file
+  ext_tracks <- readr::read_fwf(file_path,
+    readr::fwf_widths(ext_tracks_widths, ext_tracks_colnames),
+    na = "-99",
+    show_col_types = FALSE
+  )
+  return(ext_tracks)
+}
+
+
+#' Tidying hurricane data
+#'
+#' The function tidies the hurricane data by creating a unique storm_id, formatting longitude, combining date and time into a single datetime column, and converting the data to a long format.
+#'
+#' @param data A tibble containing the hurricane data.
+#' @return A tidied tibble in long format with separate rows for each wind speed.
+#' @importFrom dplyr mutate ifelse select
+#' @importFrom tidyr pivot_longer pivot_wider
+#' @importFrom lubridate ymd_h
+#' @examples
+#' \dontrun{
+#' tidy_data(dataset)
+#' }
+#' @export
+tidy_data <- function(data) {
+  data_tidy <- data %>%
+    # Creating unique storm_id
+    dplyr::mutate(storm_id = paste(storm_name, year, sep = "-")) %>%
+    # Formatting longitude
+    dplyr::mutate(longitude = ifelse(longitude > 0, -longitude, longitude)) %>%
+    # Combining date and time into a single column
+    dplyr::mutate(date = lubridate::ymd_h(paste(year, month, day, hour))) %>%
+    # Converting data to long format
+    tidyr::pivot_longer(
+      cols = starts_with("radius_"),
+      names_to = c("wind_speed", "quadrant"),
+      names_pattern = "radius_(\\d{2})_(\\w{2})",
+      values_to = "radius"
+    ) %>%
+    # Selecting columns
+    dplyr::select(storm_id, date, latitude, longitude, wind_speed, quadrant, radius) %>%
+    # Pivot wider to spread quadrants
+    tidyr::pivot_wider(
+      names_from = quadrant,
+      values_from = radius
+    ) %>%
+    # Reorder the columns
+    dplyr::select(storm_id, date, latitude, longitude, wind_speed, ne, nw, se, sw)
+  return(data_tidy)
+}
+
+
+#' Subset hurricane data
+#'
+#' The function subsets hurricane data for a specific storm and observation time.
+#' It filters the data to include only observations at the exact timestamp specified.
+#'
+#' @param dataset A dataframe containing hurricane data.
+#' @param storm_id A character string specifying the storm ID.
+#' @param observation_time A character string representing the observation time in "YYYY-MM-DD HH:MM:SS" format.
+#' @return A dataframe containing the subset of hurricane data for the specified storm and observation time.
+#' @importFrom dplyr filter
+#' @importFrom lubridate ymd_hms year month day hour minute second
+#' @examples
+#' \dontrun{
+#' subset_data(dataset, "IKE-2008", "2008-09-13 12:00:00")
+#' }
+#' @export
+subset_data <- function(dataset, storm_id, observation_time) {
+  # Converting observation_time to a POSIXct object
+  observation_time <- lubridate::ymd_hms(observation_time)
+  # Subsetting the data for the specified storm and observation time
+  data <- dataset %>%
+    dplyr::filter(
+      storm_id == !!storm_id &
+        lubridate::year(date) == lubridate::year(observation_time) &
+        lubridate::month(date) == lubridate::month(observation_time) &
+        lubridate::day(date) == lubridate::day(observation_time) &
+        lubridate::hour(date) == lubridate::hour(observation_time) &
+        lubridate::minute(date) == lubridate::minute(observation_time) &
+        lubridate::second(date) == lubridate::second(observation_time)
+    )
+  
+  return(data)
+}
+
+#' Drawing wind radii polygons
+#'
+#' The function draws wind radii polygons on the plot based on hurricane data.
+#'
+#' @param dataset A data frame containing hurricane data with columns for latitude, longitude, wind speed, and wind radii.
+#' @param params Panel parameters.
+#' @param coord Coordinates for transformation.
+#' @return A grid grob that will be plotted on the plot.
+#' @importFrom dplyr mutate bind_rows rename
+#' @importFrom geosphere destPoint
+#' @importFrom grid polygonGrob gpar
+#' @importFrom base as.character
+#' @export
+draw_panel <- function(dataset, params, coord) {
+  # Transforming data
+  coords <- coord$transform(dataset, params)
+  # Transforming meter
+  dataset <- dataset %>%
+    dplyr::mutate(
+      r_ne = r_ne * 1852 * scale_radii,
+      r_se = r_se * 1852 * scale_radii,
+      r_nw = r_nw * 1852 * scale_radii,
+      r_sw = r_sw * 1852 * scale_radii
+    )
+  
+  # Initializing an empty data frame for the wind radii points
+  datapoints <- data.frame()
+  # Looping through each row of the data to calculate wind radii points
+  for (i in 1:nrow(dataset)) {
+    # North East
+    data_ne <- data.frame(
+      colour = dataset[i, ]$colour,
+      fill = dataset[i, ]$fill,
+      geosphere::destPoint(
+        p = c(dataset[i, ]$x, dataset[i, ]$y),
+        b = 0:90,
+        d = dataset[i, ]$r_ne
+      ),
+      group = dataset[i, ]$group,
+      PANEL = dataset[i, ]$PANEL,
+      alpha = dataset[i, ]$alpha
+    )
+    # South East
+    data_se <- data.frame(
+      colour = dataset[i, ]$colour,
+      fill = dataset[i, ]$fill,
+      geosphere::destPoint(
+        p = c(dataset[i, ]$x, dataset[i, ]$y),
+        b = 90:180,
+        d = dataset[i, ]$r_se
+      ),
+      group = dataset[i, ]$group,
+      PANEL = dataset[i, ]$PANEL,
+      alpha = dataset[i, ]$alpha
+    )
+    # North West
+    data_nw <- data.frame(
+      colour = dataset[i, ]$colour,
+      fill = dataset[i, ]$fill,
+      geosphere::destPoint(
+        p = c(dataset[i, ]$x, dataset[i, ]$y),
+        b = 270:360,
+        d = dataset[i, ]$r_nw
+      ),
+      group = dataset[i, ]$group,
+      PANEL = dataset[i, ]$PANEL,
+      alpha = dataset[i, ]$alpha
+    )
+    # South West
+    data_sw <- data.frame(
+      colour = dataset[i, ]$colour,
+      fill = dataset[i, ]$fill,
+      geosphere::destPoint(
+        p = c(dataset[i, ]$x, dataset[i, ]$y),
+        b = 180:270,
+        d = dataset[i, ]$r_sw
+      ),
+      group = dataset[i, ]$group,
+      PANEL = dataset[i, ]$PANEL,
+      alpha = dataset[i, ]$alpha
+    )
+    # Connecting dataframes
+    datapoints <- dplyr::bind_rows(list(datapoints, data_nw, data_ne, data_se, data_sw))
+  }
+  # Renaming columns
+  datapoints <- datapoints %>%
+    dplyr::rename(
+      x = lon,
+      y = lat
+    )
+  # Converting to character
+  datapoints$colour <- base::as.character(datapoints$colour)
+  datapoints$fill <- base::as.character(datapoints$fill)
+  # Transforming coordinates
+  datacoord <- coord$transform(datapoints, params)
+  # Drawing polygons
+  grid::polygonGrob(
+    x = datacoord$x,
+    y = datacoord$y,
+    gp = grid::gpar(col = datacoord$colour, fill = datacoord$fill, alpha = datacoord$alpha)
+  )
+}
+
+#' Creating geom_hurricane to plot hurricane wind radii
+#'
+#' The function creates a layer for plotting hurricane wind radii on a map.
+#'
+#' @param mapping Aesthetic mappings.
+#' @param data A data frame containing hurricane data with columns for latitude, longitude, wind speed, and wind radii.
+#' @param stat The statistical transformation to use on the data.
+#' @param position The position adjustment to use on the data.
+#' @param na.rm Should missing values be removed?
+#' @param show.legend Logical. Should this layer be included in the legends?
+#' @param inherit.aes Should the aesthetics be inherited?
+#' @return An object of class ggproto representing the hurricane geom.
+#' @importFrom ggplot2 layer
+#' @export
+geom_hurricane <- function(mapping = NULL, data = NULL, stat = "identity",
+                           position = "identity", na.rm = FALSE,
+                           show.legend = NA, inherit.aes = TRUE, ...) {
+  ggplot2::layer(
+    geom = hurricane_proto_class, mapping = mapping,
+    data = data, stat = stat, position = position,
+    show.legend = show.legend, inherit.aes = inherit.aes,
+    params = list(na.rm = na.rm, ...)
+  )
+}
+
+#' The hurricane geom specification
+#'
+#' The class defines the specifications for the hurricane geom.
+#'
+#' @format A ggproto object.
+#' @importFrom ggplot2 ggproto Geom aes draw_key_polygon
+#' @export
+hurricane_proto_class <- ggplot2::ggproto("hurricane_proto_class", ggplot2::Geom,
+  required_aes = c("x", "y", "r_ne", "r_se", "r_nw", "r_sw"),
+  default_aes = ggplot2::aes(fill = 1, colour = 1, alpha = 1, scale_radii = 1),
+  draw_key = ggplot2::draw_key_polygon,
+  draw_group = draw_panel
+)
+
+
+# Executing functions -----------------------------------------------------
+
+hur_data <- tidy_data(read_data("ebtrk_atlc_1988_2015.txt"))
+ike_data <- subset_data(hur_data, "IKE-2008", "2008-09-13 12:00:00")
+
+# Google maps registration key is needed to run this plot
+get_map("Louisiana", zoom = 6, maptype = "terrain") %>%
+  ggmap(extent = "device") +
+  geom_hurricane(
+    data = ike_data,
+    aes(
+      x = longitude, y = latitude,
+      r_ne = ne, r_se = se, r_nw = nw, r_sw = sw,
+      fill = wind_speed, color = wind_speed, alpha = 0.5, scale_radii = 1
+    )
+  ) +
+  guides(alpha = "none") +
+  theme(legend.justification = c(1, 0), legend.position = c(0.97, 0.03)) +
+  scale_color_manual(
+    name = "Wind speed (kts)",
+    values = c("red", "orange", "yellow")
+  ) +
+  scale_fill_manual(
+    name = "Wind speed (kts)",
+    values = c("red", "orange", "yellow")
+  )
